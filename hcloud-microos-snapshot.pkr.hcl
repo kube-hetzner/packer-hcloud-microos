@@ -1,6 +1,6 @@
 variable "hcloud_token" {
   type    = string
-  default = "${env("HCLOUD_TOKEN")}"
+  default = env("HCLOUD_TOKEN")
 }
 
 source "hcloud" "microos-snapshot" {
@@ -13,7 +13,7 @@ source "hcloud" "microos-snapshot" {
   }
   snapshot_name = "microos-snapshot"
   ssh_username  = "root"
-  token         = "${var.hcloud_token}"
+  token         = var.hcloud_token
 }
 
 build {
@@ -21,15 +21,27 @@ build {
 
   # install MicroOS image and reboot
   provisioner "shell" {
-    script = "scripts/install_microos.sh"
+    script            = "scripts/install_microos.sh"
     expect_disconnect = true
   }
 
-  # Check if connection to MicroOS based instance is possible
+  # optional: install rke2 dependencies
+
+  provisioner "file" {
+    source      = "scripts/install_rke2.sh"
+    destination = "/tmp/install_rke2.sh"
+  }
   provisioner "shell" {
     inline = [
-        "echo Reboot successful.",
-        "uname -a"
+      "transactional-update shell < /tmp/install_rke2.sh"
+    ]
+  }
+
+  # Ensure connection to MicroOS and do house-keeping
+  provisioner "shell" {
+    inline = [
+      "echo Reboot successful, cleanup....",
+      "rm -rf /var/log/*"
     ]
   }
 }

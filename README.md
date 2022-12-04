@@ -22,6 +22,7 @@ packer build hcloud-microos-snapshot.pkr.hcl
 ```
 
 The snapshot is created in your project and can then be used.
+
 ## Using the snapshot
 
 You can refere to the snapshot by using it's ID.
